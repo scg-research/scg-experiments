@@ -29,13 +29,17 @@ def redirect_stdout_to_stderr():
         sys.stdout = old_stdout
 
 
-def get_rag() -> GraphRAG:
+def init_rag() -> None:
     global rag
+    log.info("Initializing GraphRAG engine...")
+    with redirect_stdout_to_stderr():
+        rag = GraphRAG(data_dir="data/glide", code_dir="code/glide-4.5.0")
+    log.info("GraphRAG engine initialized.")
+
+
+def get_rag() -> GraphRAG:
     if rag is None:
-        log.info("Initializing GraphRAG engine...")
-        with redirect_stdout_to_stderr():
-            rag = GraphRAG(data_dir="data/glide", code_dir="code/glide-4.5.0")
-        log.info("GraphRAG engine initialized.")
+        raise RuntimeError("RAG engine not initialized. Call init_rag() first.")
     return rag
 
 
@@ -244,6 +248,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
 
 async def main():
+    init_rag()
     log.info("Starting Semantic Graph RAG MCP Server...")
     async with stdio_server() as (read_stream, write_stream):
         await server.run(

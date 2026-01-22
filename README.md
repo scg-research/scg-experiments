@@ -1,7 +1,10 @@
 # Quick start
 
 ```bash
-docker-compose up -d
+docker-compose up -d              # Start Neo4j
+uv run python -m src.bootstrap    # Run full pipeline
+
+npx @modelcontextprotocol/inspector uv run python -m src.mcp_server # Start MCP Inspector
 ```
 
 # Queries

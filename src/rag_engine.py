@@ -21,7 +21,9 @@ class GraphRAG:
         self.file_map: Dict[str, Path] = {}
 
         print("Initializing model...")
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Using device: {self.device}")
+        self.model = SentenceTransformer("all-MiniLM-L6-v2", device=self.device)
 
         self._load_graph()
         if self.code_dir:
@@ -121,6 +123,19 @@ class GraphRAG:
         return None
 
     def _build_index(self):
+        cache_path = self.data_dir / ".embeddings_cache.pt"
+
+        if cache_path.exists():
+            print(f"Loading cached embeddings from {cache_path}...")
+            try:
+                cache = torch.load(cache_path, weights_only=False)
+                self.embeddings = cache["embeddings"]
+                self.node_ids_list = cache["node_ids"]
+                print(f"Loaded {len(self.node_ids_list)} cached embeddings.")
+                return
+            except Exception as e:
+                print(f"Cache load failed: {e}, recomputing...")
+
         print(f"Computing embeddings for {len(self.node_metadata)} nodes...")
         texts, self.node_ids_list = [], []
 
@@ -134,10 +149,25 @@ class GraphRAG:
             self.node_ids_list.append(node_id)
 
         if texts and self.model:
+            batch_size = 128 if self.device == "cuda" else 32
             self.embeddings = self.model.encode(
-                texts, convert_to_tensor=True, show_progress_bar=True
+                texts,
+                convert_to_tensor=True,
+                show_progress_bar=True,
+                batch_size=batch_size,
+                normalize_embeddings=True,
             )
             print("Embeddings computed.")
+
+            print(f"Caching embeddings to {cache_path}...")
+            torch.save(
+                {
+                    "embeddings": self.embeddings,
+                    "node_ids": self.node_ids_list,
+                },
+                cache_path,
+            )
+            print("Cache saved.")
 
     def find_nodes(self, query: str, limit: int = 5) -> List[Dict]:
         if self.embeddings is not None and self.model:
