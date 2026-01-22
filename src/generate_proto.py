@@ -11,7 +11,7 @@ def generate_proto(proto_file=None, output_dir=None):
     output_dir = Path(output_dir or proto_file.parent).resolve()
 
     if not proto_file.exists():
-        print(f"Error: Proto file not found: {proto_file}")
+        print(f"<error> Proto file not found: {proto_file}")
         return False
 
     try:
@@ -26,10 +26,10 @@ def generate_proto(proto_file=None, output_dir=None):
             capture_output=True,
             text=True,
         )
-        print(f"✓ Generated: {output_dir / proto_file.stem}_pb2.py")
+        print(f"<info> Generated: {output_dir / proto_file.stem}_pb2.py")
         return True
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"<error> Error: {e}")
         return False
 
 

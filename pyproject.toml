@@ -11,4 +11,6 @@ dependencies = [
     "networkx>=3.2.0",
     "sentence-transformers>=2.2.2",
     "neo4j>=6.0.3",
+    "hf-xet>=1.2.0",
+    "mcp>=1.1.0",
 ]
